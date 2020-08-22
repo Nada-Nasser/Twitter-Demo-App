@@ -14,20 +14,28 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+{
     //adapter class
     ArrayList<AdapterItems>    listnewsData = new ArrayList<AdapterItems>();
-    int StartFrom=0;
-    int UserOperation=SearchType.MyFollowing; // 0 my followers post 2- specifc user post 3- search post
+    int StartFrom = 0;
+    int UserOperation = SearchType.MyFollowing; // 0 my followers post 2- specifc user post 3- search post
     String Searchquery;
-    int totalItemCountVisible=0; //totalItems visible
+    int totalItemCountVisible = 0; //totalItems visible
     LinearLayout ChannelInfo;
     TextView txtnamefollowers;
-    int SelectedUserID=0;
+    int SelectedUserID = 0;
     Button buFollow;
+
+    SearchView searchView;
+    Menu myMenu;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,18 +52,18 @@ public class MainActivity extends AppCompatActivity {
         ListView lsNews=(ListView)findViewById(R.id.LVNews);
        // lsNews.setAdapter(myadapter);//intisal with data
 
-
-    }
-
-    public void buFollowers(View view) {
-//TODO: add code s=for subscribe and un subscribe
+        FirebaseAnalytics firebaseAnalytics = FirebaseAnalytics.getInstance(this);
 
 
     }
 
+    public void buFollowers(View view)
+    {
+        //TODO: add code s=for subscribe and un subscribe
 
-  SearchView searchView;
-    Menu myMenu;
+    }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
