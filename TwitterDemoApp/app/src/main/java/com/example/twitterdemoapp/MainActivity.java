@@ -27,28 +27,30 @@ public class MainActivity extends AppCompatActivity
     int UserOperation = SearchType.MyFollowing; // 0 my followers post 2- specifc user post 3- search post
     String Searchquery;
     int totalItemCountVisible = 0; //totalItems visible
-    LinearLayout ChannelInfo;
-    TextView txtnamefollowers;
     int SelectedUserID = 0;
-    Button buFollow;
 
+    Button buFollow;
     SearchView searchView;
     Menu myMenu;
+    LinearLayout ChannelInfo;
+    TextView txtnamefollowers;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-         ChannelInfo=(LinearLayout)findViewById(R.id.ChannelInfo) ;
+
+        ChannelInfo=(LinearLayout)findViewById(R.id.ChannelInfo) ;
         ChannelInfo.setVisibility(View.GONE);
         txtnamefollowers=(TextView)findViewById(R.id.txtnamefollowers) ;
-          buFollow=(Button)findViewById(R.id.buFollow);
-        //TODO: load user data setting
-        //SaveSettings saveSettings= new SaveSettings(getApplicationContext());
-       // saveSettings.LoadData();
-        //TODO: set the adapter
+        buFollow=(Button)findViewById(R.id.buFollow);
 
+
+        SaveSettings saveSettings= new SaveSettings(getApplicationContext());
+        saveSettings.LoadData();
+
+        //TODO: set the adapter
         ListView lsNews=(ListView)findViewById(R.id.LVNews);
        // lsNews.setAdapter(myadapter);//intisal with data
 

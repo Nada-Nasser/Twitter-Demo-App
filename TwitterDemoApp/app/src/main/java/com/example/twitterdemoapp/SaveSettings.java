@@ -25,10 +25,11 @@ public class SaveSettings {
          editor.commit();
     }
 
-    void LoadData(){
+    void LoadData()
+    {
         UserID= ShredRef.getString("UserID","0");
-        if (UserID.equals("0")){
-
+        if (UserID.equals("0"))
+        {
             Intent intent=new Intent(context, Login.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
