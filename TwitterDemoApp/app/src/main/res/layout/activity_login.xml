@@ -60,7 +60,8 @@
         <Button
             android:layout_width="195px"
             android:layout_height="60dp"
-            android:text="Register"
+            android:text="Register / Login"
+            android:textAllCaps="false"
             android:id="@+id/bulogin"
              android:background="@drawable/barcolor"
              android:paddingRight="5dp"

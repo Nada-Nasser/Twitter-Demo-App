@@ -24,14 +24,12 @@ import androidx.annotation.VisibleForTesting;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -42,11 +40,9 @@ import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -369,34 +365,30 @@ public class Login extends AppCompatActivity
             try {
 
                 Log.i("json", "onProgressUpdate: " + progress[0]);
-                if (progress[0].contains("string"))
-                {
-                    int indexOf = progress[0].indexOf("string");
-                    progress[0] = progress[0].substring(6);
-                }
 
                 Toast.makeText(getApplicationContext(),progress[0] , Toast.LENGTH_SHORT).show();
 
                JSONObject json = new JSONObject(progress[0]);
 
                 String phpMsg = json.getString("msg");
+
                 //display response data
                 if (phpMsg == null)
                     return;
 
-                if (phpMsg.equalsIgnoreCase("failed"))
+
+                if (phpMsg.equalsIgnoreCase("registered")
+                        ||phpMsg.equalsIgnoreCase("Registered failed") )
+                {
+                    loginUserPHPServer();
+                }
+
+
+                if(phpMsg.equalsIgnoreCase("loginFailed"))
                 {
                     UpdateUiAfterLoginFailed();
                 }
 
-                if (phpMsg.equalsIgnoreCase("registered"))
-                {
-                    String url= SERVER_PATH + "Login.php?name="+
-                            "&email="+userEmailEditText.getText().toString()
-                            +"&password="+userPasswordEditText.getText().toString();
-
-                    new MyAsyncTasks().execute(url);
-                }
 
                 if(phpMsg.equalsIgnoreCase("loggedIn"))
                 {
@@ -408,6 +400,15 @@ public class Login extends AppCompatActivity
                 Toast.makeText(getApplicationContext(),e.getMessage(),Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    private void loginUserPHPServer()
+    {
+        String url= SERVER_PATH + "Login.php?name="+
+                "&email="+userEmailEditText.getText().toString()
+                +"&password="+userPasswordEditText.getText().toString();
+
+        new MyAsyncTasks().execute(url);
     }
 
     private void UpdateUiAfterLoginFailed()
