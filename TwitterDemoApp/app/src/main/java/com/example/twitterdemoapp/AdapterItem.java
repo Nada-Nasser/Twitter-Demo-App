@@ -4,7 +4,7 @@ package com.example.twitterdemoapp;
  * Created by hussienalrubaye on 11/13/16.
  */
 
-public class AdapterItems
+public class AdapterItem
 {
     public   String tweet_id;
     public  String tweet_text;
@@ -13,9 +13,12 @@ public class AdapterItems
     public  String user_id;
     public  String first_name;
     public  String picture_path;
+
+    public String TAG;
+
     //for news details
-    AdapterItems(  String tweet_id,  String tweet_text,String tweet_picture,
-                   String tweet_date,String user_id,String first_name ,String picture_path)
+    AdapterItem(String tweet_id, String tweet_text, String tweet_picture,
+                String tweet_date, String user_id, String first_name , String picture_path)
     {
         this. tweet_id=tweet_id;
         this. tweet_text=tweet_text;
@@ -24,5 +27,11 @@ public class AdapterItems
         this. first_name=first_name;
         this. picture_path=picture_path;
         this.tweet_date=tweet_date;
+        TAG = "tweet";
+    }
+
+
+    public AdapterItem(String TAG) {
+        this.TAG = TAG;
     }
 }

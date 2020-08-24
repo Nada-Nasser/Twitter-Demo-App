@@ -276,7 +276,7 @@ public class Login extends AppCompatActivity
                                 +"&password="+userPasswordEditText.getText().toString()+"&pic="+downloadUrl;
 
 
-                        new MyAsyncTasks().execute(url);
+                        new UsersAsyncTasks().execute(url);
 
                         hideProgressDialog();
                     }catch (UnsupportedEncodingException e) {
@@ -312,7 +312,7 @@ public class Login extends AppCompatActivity
         }
     }
 
-    class MyAsyncTasks extends AsyncTask<String,String,String>
+    class UsersAsyncTasks extends AsyncTask<String,String,String>
     {
 
         @Override
@@ -408,7 +408,7 @@ public class Login extends AppCompatActivity
                 "&email="+userEmailEditText.getText().toString()
                 +"&password="+userPasswordEditText.getText().toString();
 
-        new MyAsyncTasks().execute(url);
+        new UsersAsyncTasks().execute(url);
     }
 
     private void UpdateUiAfterLoginFailed()
