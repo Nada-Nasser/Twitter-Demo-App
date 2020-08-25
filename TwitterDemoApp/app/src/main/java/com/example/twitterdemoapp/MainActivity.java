@@ -43,6 +43,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,7 +63,7 @@ public class MainActivity extends AppCompatActivity
 
     private final int RESULT_LOAD_IMAGE_CODE = 222;
     private final  int REQUEST_READ_STORAGE_CODE_PERMISSIONS = 321;
-
+    final private String SERVER_PATH = "http://localhost:8080/TwitterServer/";
 
     //adapter class
     ArrayList<AdapterItem> tweetsList = new ArrayList<AdapterItem>();
@@ -82,7 +83,6 @@ public class MainActivity extends AppCompatActivity
 
     String attachedImageURL = null;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,30 +90,28 @@ public class MainActivity extends AppCompatActivity
 
         ChannelInfo=(LinearLayout)findViewById(R.id.ChannelInfo) ;
         ChannelInfo.setVisibility(View.GONE);
+
         txtnamefollowers=(TextView)findViewById(R.id.txtnamefollowers) ;
         buFollow=(Button)findViewById(R.id.buFollow);
-
 
         SaveSettings saveSettings= new SaveSettings(getApplicationContext());
         saveSettings.LoadData();
 
-        //TODO: set the adapter
         ListView tweetsListView=(ListView)findViewById(R.id.LVNews);
         tweetsCustomAdapter = new TweetsCustomAdapter(tweetsList,this);
         tweetsListView.setAdapter(tweetsCustomAdapter);//intisal with data
 
         tweetsList.add(new AdapterItem("add"));
-        tweetsList.add(new AdapterItem("loading"));
 
         tweetsCustomAdapter.notifyDataSetChanged();
+
+        LoadTweets(0,SearchType.MyFollowing);
     }
 
     public void buFollowers(View view)
     {
         //TODO: add code s=for subscribe and un subscribe
-
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -136,8 +134,8 @@ public class MainActivity extends AppCompatActivity
                  } catch (UnsupportedEncodingException e) {
 
                 }
-                //TODO: search in posts
-                //LoadTweets(0,SearchType.SearchIn);// seearch
+
+                LoadTweets(0,SearchType.SearchIn);// seearch
                 return false;
             }
 
@@ -146,23 +144,28 @@ public class MainActivity extends AppCompatActivity
                 return false;
             }
         });
-        //   searchView.setOnCloseListener(this);
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose()
+            {
+                LoadTweets(0,SearchType.MyFollowing);// seearch
+                return false;
+            }
+        });
         return true;
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.home:
-                //TODO: main search
-              //  LoadTweets(0,SearchType.MyFollowing);
+                LoadTweets(0,SearchType.MyFollowing);
                 return true;
-
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
-
 
     class TweetsCustomAdapter extends BaseAdapter
     {
@@ -211,9 +214,15 @@ public class MainActivity extends AppCompatActivity
                         // Write post in php server..
                         if(postTextArea.getText().toString()!=null)
                         {
-                            // http://localhost/TwitterServer/AddTweet.php?user_id=1&tweet_text=Hello, This is my fisrt tweet&tweet_picture=photo.png
+                            String postText = postTextArea.getText().toString();
+                            try {
+                                //for space with name
+                                postText = java.net.URLEncoder.encode(postText , "UTF-8");
+                            } catch (UnsupportedEncodingException e) {
 
-                            boolean flag = addTweetOnPhpServer(SaveSettings.UserID , postTextArea.getText().toString() , attachedImageURL);
+                            }
+
+                            boolean flag = addTweetOnPhpServer(SaveSettings.UserID , postText , attachedImageURL);
                             if(flag)
                                 tweetsCustomAdapter.notifyDataSetChanged();
                         }
@@ -237,21 +246,52 @@ public class MainActivity extends AppCompatActivity
             {
                 myView = mInflater.inflate(R.layout.tweet_loading, null);
 
-
-
             }
             else if (adapterItem.TAG.equalsIgnoreCase("tweet"))
             {
                 myView = mInflater.inflate(R.layout.tweet_item, null);
 
+                TextView txtUserName = (TextView) myView.findViewById(R.id.txtUserName);
+                txtUserName.setText(adapterItem.first_name);
 
+                TextView txt_tweet = (TextView) myView.findViewById(R.id.txt_tweet);
+                txt_tweet.setText(adapterItem.tweet_text);
+
+                TextView txt_tweet_date = (TextView) myView.findViewById(R.id.txt_tweet_date);
+                txt_tweet_date.setText(adapterItem.tweet_date);
+
+
+                txtUserName.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view)
+                    {
+                        // TODO: onClick on user name in tweet layout.
+
+                        SelectedUserID=Integer.parseInt(adapterItem.user_id);
+                        LoadTweets(0,SearchType.OnePerson);
+                        /*
+                        txtnamefollowers.setText(adapterItem.first_name);
+
+
+                        String url="http://10.0.2.2/~hussienalrubaye/twitterserver/isfollowing.php?user_id="+SaveSettings.UserID +"&following_user_id="+SelectedUserID;
+                        new  TweetsAsyncTasks().execute(url);
+                        */
+                    }
+                });
+
+                // TODO : add picasso code to display user pic and post attached image
+                /*
+                ImageView tweet_picture=(ImageView)myView.findViewById(R.id.tweet_picture);
+                Picasso.with(context).load(adapterItem.tweet_picture).into(tweet_picture);
+                ImageView picture_path=(ImageView)myView.findViewById(R.id.picture_path);
+                Picasso.with(context).load(adapterItem.picture_path).into(picture_path);
+                */
             }
 
             return myView;
         }
     }
 
-    final private String SERVER_PATH = "http://localhost:8080/TwitterServer/";
     private boolean addTweetOnPhpServer(String userID, String tweetText, String attachedImageURL)
     {
         // http://localhost/TwitterServer/
@@ -272,7 +312,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
     void CheckReadExternalStoragePermissionAndPickImage(){
         if ( Build.VERSION.SDK_INT >= 23){
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) !=
@@ -285,7 +324,6 @@ public class MainActivity extends AppCompatActivity
         }
         pickImage();// init the contact list
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -333,8 +371,6 @@ public class MainActivity extends AppCompatActivity
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
-
 
 
     private void uploadImage(Bitmap bitmap)
@@ -484,14 +520,37 @@ public class MainActivity extends AppCompatActivity
                 if (phpMsg == null)
                     return;
 
-                if (phpMsg.equalsIgnoreCase("post added"))
+                if (phpMsg.equalsIgnoreCase("post added")) // load my following tweets
                 {
                     UpdateUiAfterPostAdded();
                 }
 
-                if(phpMsg.equalsIgnoreCase("post failed"))
+                if(phpMsg.equalsIgnoreCase("post failed")) // do nothing
                 {
-                    UpdateUiAfterPostFailed();
+                    Log.i("ADD_POST", "UpdateUiAfterPostAdded: failed ");
+                }
+
+                if(phpMsg.equalsIgnoreCase("hasTweets"))
+                {
+                    UpdateUiAfterHasTweetsMsg(json);
+                }
+
+                if(phpMsg.equalsIgnoreCase("noTweets"))
+                {
+                    //remove we are loading now
+                    if(StartFrom == 0) // refresh tweets list view.
+                    {
+                        tweetsList.clear();
+                        tweetsList.add(new AdapterItem("add"));
+                    }
+                    else {
+
+                        //remove we are loading now
+                        tweetsList.remove(tweetsList.size()-1);
+                    }
+
+                    tweetsList.add(new AdapterItem("noTweet"));
+                    tweetsCustomAdapter.notifyDataSetChanged();
                 }
             }
             catch (JSONException e) {
@@ -501,14 +560,80 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void UpdateUiAfterPostAdded() {
-        // TODO: LoadTweets(0,UserOperation);
-        Log.i("ADD_POST", "UpdateUiAfterPostAdded: post added successfully");
+    private void UpdateUiAfterHasTweetsMsg(JSONObject json)
+    {
+        if(StartFrom == 0) // for refreshing
+        {
+            tweetsList.clear();
+            tweetsList.add(new AdapterItem("add"));
+        }
+        else { // when i just loading more
+            //remove we are loading now
+            tweetsList.remove(tweetsList.size()-1);
+        }
+
+        try // load tweets that are  results from the php server and add it to the list view
+        {
+            JSONArray tweetsInfo = new JSONArray(json.getString("tweets"));
+
+            for(int i = 0 ; i < tweetsInfo.length() ; i++)
+            {
+                JSONObject tweet = tweetsInfo.getJSONObject(i);
+
+                //add data and view it
+                tweetsList.add(new AdapterItem(tweet.getString("tweet_id"),
+                        tweet.getString("tweet_text"),tweet.getString("tweet_picture") ,
+                        tweet.getString("tweet_date") ,tweet.getString("user_id") ,tweet.getString("first_name")
+                        ,tweet.getString("picture_path") ));
+            }
+
+            tweetsCustomAdapter.notifyDataSetChanged();
+        }
+        catch (JSONException e)
+        {
+            e.printStackTrace();
+        }
     }
 
-    private void UpdateUiAfterPostFailed() {
-        // TODO: failed message
-        Log.i("ADD_POST", "UpdateUiAfterPostAdded: failed ");
+    private void UpdateUiAfterPostAdded()
+    {
+        Log.i("ADD_POST", "UpdateUiAfterPostAdded: post added successfully");
+        LoadTweets(0,SearchType.MyFollowing);
+    }
+
+    void LoadTweets(int startFrom , int op) // op = 1 , 2 or 3
+    {
+        this.StartFrom=startFrom;
+        this.UserOperation = op;
+
+        //display loading
+        if(StartFrom==0) // add loading at beggining
+            tweetsList.add(0,new AdapterItem("loading"));
+        else // add loading at end
+            tweetsList.add(new AdapterItem("loading"));
+
+        tweetsCustomAdapter.notifyDataSetChanged();
+
+        String url = SERVER_PATH + "listTweets.php?";
+
+        if (UserOperation == SearchType.MyFollowing) // 1
+             url+= "user_id="+ SaveSettings.UserID + "&StartFrom="+StartFrom + "&op="+ UserOperation; // 1
+
+        if(UserOperation == SearchType.OnePerson) // 2
+            url+= "user_id="+ SelectedUserID + "&StartFrom="+StartFrom + "&op="+ UserOperation;
+
+        if (UserOperation == SearchType.SearchIn) // 3
+            url+= "&StartFrom="+StartFrom + "&op="+ UserOperation + "&query="+ Searchquery;
+
+
+        new TweetsAsyncTasks().execute(url);
+
+
+        if (UserOperation==SearchType.OnePerson)
+            ChannelInfo.setVisibility(View.VISIBLE);
+        else
+            ChannelInfo.setVisibility(View.GONE);
+
     }
 
 }

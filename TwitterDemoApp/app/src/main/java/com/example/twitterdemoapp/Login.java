@@ -81,7 +81,6 @@ public class Login extends AppCompatActivity
             }
         });
 
-        //TODO: user register into firebase
         firebaseAuth = FirebaseAuth.getInstance();
 
         authStateListener = new FirebaseAuth.AuthStateListener()
@@ -211,7 +210,6 @@ public class Login extends AppCompatActivity
 
     public void buLogin(View view)
     {
-        //TODO: user login
         try {
             showProgressDialog();
 
@@ -268,8 +266,6 @@ public class Login extends AppCompatActivity
                         name = java.net.URLEncoder.encode(usernameEditText.getText().toString(), "UTF-8");
                         downloadUrl = java.net.URLEncoder.encode(downloadUrl, "UTF-8");
 
-
-                        //TODO:  login and register
 
                         String url= SERVER_PATH +"Register.php?name="+usernameEditText.getText().toString()
                                 +"&email="+userEmailEditText.getText().toString()

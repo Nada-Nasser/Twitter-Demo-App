@@ -6,7 +6,7 @@ package com.example.twitterdemoapp;
  */
 
 public class SearchType {
-    public static int MyFollowing=1;
-    public static int OnePerson=2;
-    public static int SearchIn=3;
+    public static int MyFollowing = 1; // list my following tweets and my tweets
+    public static int OnePerson = 2; // search some user tweets
+    public static int SearchIn = 3; // search using query (wrote by all users)
 }
