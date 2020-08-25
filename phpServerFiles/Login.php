@@ -17,7 +17,7 @@ $userInfo = array();
 
 if(!$result)
 {
-	print ("{'msg' : 'can't login}");
+	print ("{'msg' : 'Login failed}");
 }
 else{
 	while ($row = mysqli_fetch_assoc($result))
@@ -27,12 +27,12 @@ else{
 	}
 
 	if ($userInfo) {
-		print(" {'msg' : 'user logged in successfuly' ,
-		 'info' : '".json_encode($userInfo)."'}");
+		print(" {\"msg\":\"loggedIn\",
+		 \"info\":'".json_encode($userInfo)."'}");
 
 	}
 	else {
-		print("{'msg' : 'can't login}");
+		print("{'msg':'loginFailed'}");
 	}
 }
 

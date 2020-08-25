@@ -16,13 +16,16 @@ $query =
 $result = mysqli_query($dbConnection , $query);
 
 if ($result) {
-	$output = "{'msg' : 'user registered successfuly'}";
+
+	$output ="{\"msg\":\"registered\"}";
 }	
 else{
-	$output = "{'msg' : 'faild'}";
+//	$output = "{\"msg\":\"Register failed\"}";
+		$arr = array('msg' => 'Registered failed');
+	$output = $arr;
 }
 
-echo ($output);
+echo (json_encode($output));
 
 
 //5- close connection
