@@ -256,7 +256,8 @@ public class Login extends AppCompatActivity
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot)
                 {
                     try {
-                        String downloadUrl = mountainsRef.getDownloadUrl().toString();
+                       // String downloadUrl = mountainsRef.getDownloadUrl().toString();
+                        String downloadUrl = mountainsRef.getPath();
 
                         Log.i("UploadImage", "onSuccess: " + downloadUrl);
 

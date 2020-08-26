@@ -123,7 +123,6 @@
             android:adjustViewBounds="true"
             android:scaleType="fitXY"
             android:layout_width="fill_parent"
-            android:src="@drawable/twitter"
             android:layout_marginLeft="5dp"
             android:layout_marginRight="5dp"
             android:id="@+id/tweet_picture"

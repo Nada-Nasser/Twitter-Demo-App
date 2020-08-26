@@ -42,6 +42,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,10 +54,12 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
 
 public class MainActivity extends AppCompatActivity
 {
@@ -132,7 +135,7 @@ public class MainActivity extends AppCompatActivity
                     //for space with name
                     Searchquery = java.net.URLEncoder.encode(query , "UTF-8");
                  } catch (UnsupportedEncodingException e) {
-
+                    e.printStackTrace();
                 }
 
                 LoadTweets(0,SearchType.SearchIn);// seearch
@@ -217,9 +220,9 @@ public class MainActivity extends AppCompatActivity
                             String postText = postTextArea.getText().toString();
                             try {
                                 //for space with name
-                                postText = java.net.URLEncoder.encode(postText , "UTF-8");
+                                postText = URLEncoder.encode(postText , "UTF-8");
                             } catch (UnsupportedEncodingException e) {
-
+                                e.printStackTrace();
                             }
 
                             boolean flag = addTweetOnPhpServer(SaveSettings.UserID , postText , attachedImageURL);
@@ -279,13 +282,57 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
 
-                // TODO : add picasso code to display user pic and post attached image
-                /*
-                ImageView tweet_picture=(ImageView)myView.findViewById(R.id.tweet_picture);
-                Picasso.with(context).load(adapterItem.tweet_picture).into(tweet_picture);
-                ImageView picture_path=(ImageView)myView.findViewById(R.id.picture_path);
-                Picasso.with(context).load(adapterItem.picture_path).into(picture_path);
-                */
+                try {
+                    Picasso.get().setLoggingEnabled(true);
+                    final ImageView tweet_picture = (ImageView) myView.findViewById(R.id.tweet_picture);
+                    final ImageView picture_path = (ImageView) myView.findViewById(R.id.picture_path);
+
+                if(adapterItem.tweet_picture != null)
+                {
+                    FirebaseStorage.getInstance().getReference(adapterItem.tweet_picture).getDownloadUrl()
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Handle any errors
+                                    exception.printStackTrace();
+                                    tweet_picture.setVisibility(View.GONE);
+                                }
+                            })
+                            .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri downloadUrl) {
+                                    //do something with downloadurl
+                                    Picasso.get().load(downloadUrl).into(tweet_picture);
+                                    Log.i("TAG", "onSuccess: " + downloadUrl + " ----> " + downloadUrl.toString());
+                                }
+                            });
+
+                }
+
+                if(adapterItem.picture_path != null)
+                {
+                    FirebaseStorage.getInstance().getReference(adapterItem.picture_path).getDownloadUrl()
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Handle any errors
+                                    exception.printStackTrace();
+                                }
+                            })
+                            .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri downloadUrl) {
+                                    //do something with downloadurl
+                                    Picasso.get().load(downloadUrl).into(picture_path);
+                                    Log.i("TAG", "onSuccess: " + downloadUrl + " ----> " + downloadUrl.toString());
+                                }
+                            });
+                }
+
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
             }
 
             return myView;
@@ -294,8 +341,7 @@ public class MainActivity extends AppCompatActivity
 
     private boolean addTweetOnPhpServer(String userID, String tweetText, String attachedImageURL)
     {
-        // http://localhost/TwitterServer/
-        // AddTweet.php?user_id=1&tweet_text=Hello, This is my fisrt tweet&tweet_picture=photo.png
+        // http://localhost/TwitterServer/AddTweet.php?user_id=1&tweet_text=Hello, This is my fisrt tweet&tweet_picture=photo.png
         try {
 
             String url= SERVER_PATH +
@@ -398,35 +444,39 @@ public class MainActivity extends AppCompatActivity
 
             uploadTask.addOnFailureListener(new OnFailureListener() {
                 @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle unsuccessful uploads
-                    hideProgressDialog();
+                public void onFailure(@NonNull Exception exception) { hideProgressDialog();
                 }
             })
-                    .addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>()
+             .addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>()
+             {
+                    @Override
+                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task)
                     {
-                        @Override
-                        public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task)
-                        {
-                            hideProgressDialog();
-                        }
-                    })
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>()
-                    {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot)
-                        {
-                            try {
-                                attachedImageURL = mountainsRef.getDownloadUrl().toString();
-                                attachedImageURL = java.net.URLEncoder.encode(attachedImageURL, "UTF-8");
+                        hideProgressDialog();
+                    }
+             })
+             .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>()
+             {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot)
+                {
+                    try {
+                        // load into tweet pic.
 
-                                hideProgressDialog();
-                            }
-                            catch (UnsupportedEncodingException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
+                        //attachedImageURL = taskSnapshot.getMetadata().getReference().getDownloadUrl().toString();
+
+                        attachedImageURL = mountainsRef.getPath();
+                        //attachedImageURL = mountainsRef.getDownloadUrl().toString();
+                       // attachedImageURL = java.net.URLEncoder.encode(attachedImageURL, "UTF-8");
+
+                        hideProgressDialog();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+             });
 
         }
         catch (Exception e)
@@ -510,7 +560,7 @@ public class MainActivity extends AppCompatActivity
 
                 Log.i("json", "onProgressUpdate: " + progress[0]);
 
-                Toast.makeText(getApplicationContext(),progress[0] , Toast.LENGTH_SHORT).show();
+              //  Toast.makeText(getApplicationContext(),progress[0] , Toast.LENGTH_SHORT).show();
 
                 JSONObject json = new JSONObject(progress[0]);
 

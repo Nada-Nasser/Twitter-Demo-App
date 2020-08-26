@@ -41,4 +41,5 @@ dependencies {
     //firebase - storage
     implementation 'com.google.firebase:firebase-storage:19.1.1'
 
+    implementation 'com.squareup.picasso:picasso:2.8'
 }
