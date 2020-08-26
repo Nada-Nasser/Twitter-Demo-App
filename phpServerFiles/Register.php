@@ -17,11 +17,12 @@ $result = mysqli_query($dbConnection , $query);
 
 if ($result) {
 
-	$output ="{\"msg\":\"registered\"}";
+	$arr = array('msg' => 'registered');
+	$output = $arr;
 }	
 else{
 //	$output = "{\"msg\":\"Register failed\"}";
-		$arr = array('msg' => 'Registered failed');
+	$arr = array('msg' => 'Registered failed');
 	$output = $arr;
 }
 
