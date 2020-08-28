@@ -1,8 +1,10 @@
 package com.example.twitterdemoapp;
 
+
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -32,6 +34,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -78,11 +81,14 @@ public class MainActivity extends AppCompatActivity
     int totalItemCountVisible = 0; //totalItems visible
     int SelectedUserID = 0;
 
-    Button buFollow;
+
     SearchView searchView;
     Menu myMenu;
+
     LinearLayout ChannelInfo;
     TextView txtnamefollowers;
+    Button buFollow;
+    ImageView selectedUserImage;
 
     String attachedImageURL = null;
 
@@ -96,6 +102,7 @@ public class MainActivity extends AppCompatActivity
 
         txtnamefollowers=(TextView)findViewById(R.id.txtnamefollowers) ;
         buFollow=(Button)findViewById(R.id.buFollow);
+        selectedUserImage = findViewById(R.id.iv_channel_icon);
 
         SaveSettings saveSettings= new SaveSettings(getApplicationContext());
         saveSettings.LoadData();
@@ -113,7 +120,24 @@ public class MainActivity extends AppCompatActivity
 
     public void buFollowers(View view)
     {
-        //TODO: add code s=for subscribe and un subscribe
+        String url = SERVER_PATH;
+        int op = 0;
+        // http://localhost:8080/TwitterServer/UserFollowing.php?user_id=1&following_user_id=2&op=1
+        // op == 1 -> [user id]  follow [following user id]
+        // op == 2 ->  //[user id] unfollow [user id]
+
+        if(buFollow.getText().toString().equalsIgnoreCase("Follow")) {
+            op = 1;
+            buFollow.setText("un Follow");
+        }
+        else if (buFollow.getText().toString().equalsIgnoreCase("un Follow")) {
+            op = 2;
+            buFollow.setText("Follow");
+        }
+
+        url+= "UserFollowing.php?user_id="+SaveSettings.UserID+"&following_user_id="+SelectedUserID+"&op="+op;
+
+        new TweetsAsyncTasks().execute(url);
     }
 
     @Override
@@ -225,9 +249,10 @@ public class MainActivity extends AppCompatActivity
                                 e.printStackTrace();
                             }
 
-                            boolean flag = addTweetOnPhpServer(SaveSettings.UserID , postText , attachedImageURL);
-                            if(flag)
-                                tweetsCustomAdapter.notifyDataSetChanged();
+                                    boolean flag = addTweetOnPhpServer(SaveSettings.UserID, postText, attachedImageURL);
+                                    if (flag)
+                                        tweetsCustomAdapter.notifyDataSetChanged();
+
                         }
                     }
                 });
@@ -263,79 +288,143 @@ public class MainActivity extends AppCompatActivity
                 TextView txt_tweet_date = (TextView) myView.findViewById(R.id.txt_tweet_date);
                 txt_tweet_date.setText(adapterItem.tweet_date);
 
+                final ImageView buLikePost = myView.findViewById(R.id.iv_share);
+
+                buLikePost.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        buLikePost.setImageResource(R.drawable.love_icon);
+                    }
+                });
+
 
                 txtUserName.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view)
                     {
-                        // TODO: onClick on user name in tweet layout.
 
-                        SelectedUserID=Integer.parseInt(adapterItem.user_id);
+                        SelectedUserID = Integer.parseInt(adapterItem.user_id);
                         LoadTweets(0,SearchType.OnePerson);
-                        /*
+
                         txtnamefollowers.setText(adapterItem.first_name);
+                        String imageURL = adapterItem.picture_path;
 
+                        ImageFromFirebaseToImageView(imageURL,selectedUserImage);
 
-                        String url="http://10.0.2.2/~hussienalrubaye/twitterserver/isfollowing.php?user_id="+SaveSettings.UserID +"&following_user_id="+SelectedUserID;
+                        if(SelectedUserID == Integer.parseInt(SaveSettings.UserID))
+                        {
+                            buFollow.setVisibility(View.GONE);
+                        }
+                        else
+                        {
+                            buFollow.setVisibility(View.VISIBLE);
+
+                        }
+
+                        //http://localhost/TwitterServer/isFollowing.php?user_id=1&following_user_id=2
+
+                        String url = SERVER_PATH + "isFollowing.php?user_id=" + SaveSettings.UserID
+                                + "&following_user_id="+adapterItem.user_id;
+
                         new  TweetsAsyncTasks().execute(url);
-                        */
                     }
                 });
+
 
                 try {
                     Picasso.get().setLoggingEnabled(true);
                     final ImageView tweet_picture = (ImageView) myView.findViewById(R.id.tweet_picture);
                     final ImageView picture_path = (ImageView) myView.findViewById(R.id.picture_path);
 
-                if(adapterItem.tweet_picture != null)
-                {
-                    FirebaseStorage.getInstance().getReference(adapterItem.tweet_picture).getDownloadUrl()
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    // Handle any errors
-                                    exception.printStackTrace();
-                                    tweet_picture.setVisibility(View.GONE);
-                                }
-                            })
-                            .addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri downloadUrl) {
-                                    //do something with downloadurl
-                                    Picasso.get().load(downloadUrl).into(tweet_picture);
-                                    Log.i("TAG", "onSuccess: " + downloadUrl + " ----> " + downloadUrl.toString());
-                                }
-                            });
+                    if(adapterItem.tweet_picture != null)
+                    {
+                        FirebaseStorage.getInstance().getReference(adapterItem.tweet_picture).getDownloadUrl()
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        // Handle any errors
+                                      //  exception.printStackTrace();
+                                        tweet_picture.setVisibility(View.GONE);
+                                    }
+                                })
+                                .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri downloadUrl) {
+                                        //do something with downloadurl
+                                        Picasso.get().load(downloadUrl).into(tweet_picture);
+                                        Log.i("TAG", "onSuccess: " + downloadUrl + " ----> " + downloadUrl.toString());
+                                    }
+                                });
 
-                }
+                    }
 
-                if(adapterItem.picture_path != null)
-                {
-                    FirebaseStorage.getInstance().getReference(adapterItem.picture_path).getDownloadUrl()
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    // Handle any errors
-                                    exception.printStackTrace();
-                                }
-                            })
-                            .addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri downloadUrl) {
-                                    //do something with downloadurl
-                                    Picasso.get().load(downloadUrl).into(picture_path);
-                                    Log.i("TAG", "onSuccess: " + downloadUrl + " ----> " + downloadUrl.toString());
-                                }
-                            });
-                }
+                    if(adapterItem.picture_path != null)
+                    {
+                        FirebaseStorage.getInstance().getReference(adapterItem.picture_path).getDownloadUrl()
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        // Handle any errors
+                                     //   exception.printStackTrace();
+                                    }
+                                })
+                                .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri downloadUrl) {
+                                        //do something with downloadurl
+                                        Picasso.get().load(downloadUrl).into(picture_path);
+                                        Log.i("TAG", "onSuccess: " + downloadUrl + " ----> " + downloadUrl.toString());
+                                    }
+                                });
+                    }
 
                 }
                 catch (Exception e){
-                    e.printStackTrace();
+                   // e.printStackTrace();
+                    Log.i("Firebase images", "getView: " +  e.getMessage());
                 }
             }
-
             return myView;
+        }
+    }
+
+    Boolean ImageFromFirebaseToImageView(String url , final ImageView imgView)
+    {
+        final boolean[] flag = {true};
+        try {
+            Picasso.get().setLoggingEnabled(true);
+
+            if(url != null)
+            {
+                FirebaseStorage.getInstance().getReference(url).getDownloadUrl()
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle any errors
+                                exception.printStackTrace();
+                                flag[0] = false;
+
+                            }
+                        })
+                        .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri downloadUrl) {
+                                //do something with downloadurl
+                                Picasso.get().load(downloadUrl).into(imgView);
+                                Log.i("TAG", "onSuccess: " + downloadUrl + " ----> " + downloadUrl.toString());
+                                flag[0] = true;
+                            }
+                        });
+                return flag[0];
+            }
+            else
+            {
+                return false;
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -344,10 +433,14 @@ public class MainActivity extends AppCompatActivity
         // http://localhost/TwitterServer/AddTweet.php?user_id=1&tweet_text=Hello, This is my fisrt tweet&tweet_picture=photo.png
         try {
 
+            String imgURL = attachedImageURL;
+
             String url= SERVER_PATH +
-                    "AddTweet.php?user_id="+userID+"&tweet_text="+tweetText+"&tweet_picture="+attachedImageURL;
+                    "AddTweet.php?user_id="+userID+"&tweet_text="+tweetText+"&tweet_picture="+imgURL;
 
             new TweetsAsyncTasks().execute(url);
+
+            this.attachedImageURL = null;
 
             return true;
         }
@@ -401,19 +494,27 @@ public class MainActivity extends AppCompatActivity
     {
         if (requestCode == RESULT_LOAD_IMAGE_CODE && resultCode == RESULT_OK && null != data)
         {
-            Uri selectedImageUri = data.getData();
-            String[] dataPath = {MediaStore.Images.Media.DATA};
-            Cursor cursor = getContentResolver()
-                    .query(selectedImageUri,dataPath,null,null,null);
-            cursor.moveToFirst();
+            try {
+                showProgressDialog();
 
-            int columnIndex = cursor.getColumnIndex(dataPath[0]);
-            String picturePath = cursor.getString(columnIndex);
-            cursor.close();
+                Uri selectedImageUri = data.getData();
+                String[] dataPath = {MediaStore.Images.Media.DATA};
+                Cursor cursor = getContentResolver()
+                        .query(selectedImageUri, dataPath, null, null, null);
+                cursor.moveToFirst();
 
-            //userImageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+                int columnIndex = cursor.getColumnIndex(dataPath[0]);
+                String picturePath = cursor.getString(columnIndex);
+                cursor.close();
 
-            uploadImage(BitmapFactory.decodeFile(picturePath));
+                //userImageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+
+                uploadImage(BitmapFactory.decodeFile(picturePath));
+            }catch (Exception Ex)
+            {
+                Ex.printStackTrace();
+                Toast.makeText(getApplicationContext() , "Couldnot upload the image" ,Toast.LENGTH_LONG).show();
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -422,7 +523,6 @@ public class MainActivity extends AppCompatActivity
     private void uploadImage(Bitmap bitmap)
     {
         try {
-            showProgressDialog();
             showProgressDialog();
 
             DateFormat df = new SimpleDateFormat("ddMMyyHHmmss");
@@ -444,7 +544,9 @@ public class MainActivity extends AppCompatActivity
 
             uploadTask.addOnFailureListener(new OnFailureListener() {
                 @Override
-                public void onFailure(@NonNull Exception exception) { hideProgressDialog();
+                public void onFailure(@NonNull Exception exception)
+                {
+                    Toast.makeText(getApplicationContext(),"couldn't Attach the image " + exception.getMessage()  , Toast.LENGTH_SHORT).show();
                 }
             })
              .addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>()
@@ -466,10 +568,11 @@ public class MainActivity extends AppCompatActivity
                         //attachedImageURL = taskSnapshot.getMetadata().getReference().getDownloadUrl().toString();
 
                         attachedImageURL = mountainsRef.getPath();
+                        Toast.makeText(getApplicationContext(),"Image Attached" , Toast.LENGTH_SHORT).show();
                         //attachedImageURL = mountainsRef.getDownloadUrl().toString();
                        // attachedImageURL = java.net.URLEncoder.encode(attachedImageURL, "UTF-8");
 
-                        hideProgressDialog();
+
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -482,8 +585,8 @@ public class MainActivity extends AppCompatActivity
         catch (Exception e)
         {
             e.printStackTrace();
+            Toast.makeText(getApplicationContext(),"Couldn't upload the image" , Toast.LENGTH_LONG).show();
         }
-        hideProgressDialog();
     }
 
     // loading display
@@ -602,6 +705,18 @@ public class MainActivity extends AppCompatActivity
                     tweetsList.add(new AdapterItem("noTweet"));
                     tweetsCustomAdapter.notifyDataSetChanged();
                 }
+
+
+                if (phpMsg.equalsIgnoreCase("following"))
+                {
+                    buFollow.setText("un Follow");
+                }
+
+                if (phpMsg.equalsIgnoreCase("not following"))
+                {
+                    buFollow.setText("Follow");
+                }
+
             }
             catch (JSONException e) {
                 e.printStackTrace();

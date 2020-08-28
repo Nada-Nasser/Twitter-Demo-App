@@ -147,7 +147,6 @@
             android:layout_height="match_parent">
 
             <ImageView
-
                 android:layout_width="25dp"
                 android:layout_height="25dp"
                 android:id="@+id/iv_share"
