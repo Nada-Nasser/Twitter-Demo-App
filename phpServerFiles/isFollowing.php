@@ -30,7 +30,7 @@ else{
 
 	}
 	else {
-		$arr = array('msg' => 'no following');
+		$arr = array('msg' => 'not following');
 		$output = $arr;
 	}
 }

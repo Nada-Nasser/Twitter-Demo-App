@@ -46,7 +46,8 @@ elseif ($op == 2)  //[user id] unfollow [user id]
 		$output = $arr;
 	}
 	else{
-		die("Error in query");
+		$arr = array('msg' => 'unfollow failed');
+		$output = $arr;
 	}
 }
 
